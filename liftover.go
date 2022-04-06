@@ -34,7 +34,7 @@ func (self *LiftOver) Lift(reference_build, query_build string, query *ChainInte
 
 	lotree, lotree_exists := self.trees[*key]
 	if lotree_exists {
-		atree, atree_exists := lotree.contigs[query.contig]
+		atree, atree_exists := lotree.contigs[query.Contig]
 		if atree_exists {
 			for _, res := range (*atree).Query(query) {
 				// Use type assertion to specify that the Interval
