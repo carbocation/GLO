@@ -9,9 +9,10 @@ import (
 
 // Represents a contig:start-end structure.
 type ChainInterval struct {
-	Contig string
-	Start  int64
-	End    int64
+	Contig   string
+	Start    int64
+	End      int64
+	Inverted bool
 }
 
 func (ci ChainInterval) size() int64 {
@@ -82,6 +83,7 @@ func (link *ChainLink) GetOverlap(region *ChainInterval) *ChainInterval {
 	overlap.Contig = link.query.Contig
 	overlap.Start = link.query.Start + start_offset
 	overlap.End = link.query.End - end_offset
+	overlap.Inverted = link.query.Inverted
 	// fmt.Printf("%s\n", link.chain.Header())
 	// fmt.Printf("%s\t%s\n", link, overlap)
 	return overlap
@@ -178,15 +180,18 @@ func (c *Chain) load_links(reader *bufio.Reader) {
 		link.dq = dq
 
 		link.reference = NewChainInterval(c.tName, tFrom, tFrom+size)
+		link.reference.Inverted = inverted
 
 		tFrom += size + dt
 		if !inverted {
 			// Regular orientation; handle as usual
 			link.query = NewChainInterval(c.qName, qFrom, qFrom+size)
+			link.query.Inverted = inverted
 			qFrom += size + dq
 		} else {
 			// Inverse orientation; handle on complementary strand
 			link.query = NewChainInterval(c.qName, qFrom-size-1, qFrom)
+			link.query.Inverted = inverted
 			qFrom -= (size + dq)
 		}
 		c.links = append(c.links, link)
@@ -215,11 +220,14 @@ func (c *Chain) load_links(reader *bufio.Reader) {
 	link.size = size
 
 	link.reference = NewChainInterval(c.tName, tFrom, tFrom+size)
+	link.reference.Inverted = inverted
 
 	if !inverted {
 		link.query = NewChainInterval(c.qName, qFrom, qFrom+size)
+		link.query.Inverted = inverted
 	} else {
 		link.query = NewChainInterval(c.qName, qFrom-size-1, qFrom)
+		link.query.Inverted = inverted
 	}
 
 	c.links = append(c.links, link)
